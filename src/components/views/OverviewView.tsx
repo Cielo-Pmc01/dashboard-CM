@@ -31,8 +31,8 @@ function lineChart(values: number[]): string {
 interface Props { active: boolean; }
 
 export default function OverviewView({ active }: Props) {
-  const { format, owner, search } = useCMStore();
-  const items = filteredContent(allContent, format, owner, search);
+  const { format, owner, search, marca } = useCMStore();
+  const items = filteredContent(allContent, format, owner, search, marca);
 
   const ready   = items.filter((c) => ['Aprobado', 'Programado'].includes(c.status)).length;
   const blocked = items.filter((c) => c.score < 70).length;

@@ -9,11 +9,11 @@ const STATUSES = ['Idea', 'Guion', 'Grabado', 'Editado', 'Aprobado', 'Programado
 interface Props { active: boolean; }
 
 export default function PipelineView({ active }: Props) {
-  const { format, search } = useCMStore();
+  const { format, search, marca } = useCMStore();
   const [owner, setOwner] = useState('all');
 
   const owners = ['all', ...Array.from(new Set(allContent.map((c) => c.owner))).sort()];
-  const items = filteredContent(allContent, format, owner, search);
+  const items = filteredContent(allContent, format, owner, search, marca);
 
   return (
     <section className={`view${active ? ' active' : ''}`} id="pipeline">
