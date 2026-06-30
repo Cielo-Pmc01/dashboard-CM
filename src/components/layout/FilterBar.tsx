@@ -1,5 +1,6 @@
 import { useCMStore } from '@/store';
-import type { FormatKey } from '@/types';
+import { MARCAS_ACTIVAS } from '@/data/brands';
+import type { FormatKey, MarcaFilter } from '@/types';
 
 const FORMATS: { key: FormatKey; label: string }[] = [
   { key: 'all',      label: 'Todo'       },
@@ -10,10 +11,11 @@ const FORMATS: { key: FormatKey; label: string }[] = [
 ];
 
 export default function FilterBar() {
-  const { format, search, setFormat, setSearch } = useCMStore();
+  const { format, marca, search, setFormat, setMarca, setSearch } = useCMStore();
 
   function reset() {
     setFormat('all');
+    setMarca('all');
     setSearch('');
   }
 
@@ -31,10 +33,20 @@ export default function FilterBar() {
         ))}
       </div>
       <div className="toolbar">
+        <select
+          value={marca}
+          onChange={(e) => setMarca(e.target.value as MarcaFilter)}
+          style={{ minHeight: 40, padding: '0 10px', borderRadius: 'var(--radius)', border: '1px solid var(--line)', background: 'rgba(255,255,255,.07)', color: 'var(--text)', fontSize: 13 }}
+        >
+          <option value="all">Todas las marcas</option>
+          {MARCAS_ACTIVAS.map((m) => (
+            <option key={m.key} value={m.key}>{m.nombre}</option>
+          ))}
+        </select>
         <input
           className="search"
           type="search"
-          placeholder="Buscar hook, CTA, responsable..."
+          placeholder="Buscar hook, marca, responsable..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />

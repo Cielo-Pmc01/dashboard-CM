@@ -1,34 +1,59 @@
 import { useState } from 'react';
 import { sources } from '@/data/mock';
+import { MARCAS_ACTIVAS } from '@/data/brands';
 
 interface Props { active: boolean; }
 
+const OBJETIVOS = ['Consulta / DM', 'Reserva directa', 'WhatsApp', 'Visita al perfil', 'Guardar'];
+const ANGULOS   = ['Experiencia POV', 'Testimonio de cliente', 'Tips prácticos', 'Antes / Después', 'Comparación destinos', 'Pregunta retórica'];
+const TONOS     = [
+  { label: 'Familiar / Cercano (TB)', value: 1 },
+  { label: 'Premium / Inspirador (BE, PB)', value: 2 },
+  { label: 'Joven / Viral (TC)', value: 3 },
+  { label: 'Económico / Directo (TP)', value: 4 },
+  { label: 'Portugués / Brasil (PBRS, TBBR)', value: 5 },
+];
+
+function generarHook(angulo: string, marca: string, tono: number): string {
+  const hooks: Record<string, string[]> = {
+    'Experiencia POV':         ['El día que [excursión] te cambia la perspectiva de la Patagonia.', 'Esto es lo que sentís cuando llegás al [destino] por primera vez.'],
+    'Testimonio de cliente':   ['"Nunca pensé que Bariloche en invierno iba a ser tan increíble." — Familia de Buenos Aires.', '"La mejor decisión del viaje fue esta excursión." — Turista brasileño.'],
+    'Tips prácticos':          ['Todo lo que nadie te dice antes de ir a [destino] en invierno.', '5 cosas que tenés que saber antes de reservar en Bariloche.'],
+    'Antes / Después':         ['Antes: no sabíamos qué hacer en Bariloche. Después: hicimos [excursión] y queremos volver.', 'Llegaron sin plan. Se fueron con el mejor recuerdo de su vida.'],
+    'Comparación destinos':    ['Si tenés que elegir entre el Circuito Chico y Cerro Campanario, este reel decide por vos.', 'Las 3 excursiones imperdibles de Bariloche — y cuál hacer primero.'],
+    'Pregunta retórica':       ['¿Sabés qué pasa cuando bajás el Río Limay por primera vez? 🌊', '¿Nunca pisaste nieve? Esto es lo que sentís el primer día en Bariloche. ❄️'],
+  };
+  const pool = hooks[angulo] ?? hooks['Experiencia POV'];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 export default function GeneratorView({ active }: Props) {
   const [source,    setSource]    = useState(sources[0].name);
+  const [marcaSel,  setMarcaSel]  = useState(MARCAS_ACTIVAS[0].key);
   const [format,    setFormat]    = useState('Reel');
-  const [objective, setObjective] = useState('DM');
-  const [edge,      setEdge]      = useState(4);
-  const [score,     setScore]     = useState(90);
-  const [output,    setOutput]    = useState(generatorText(sources[0].name, 'Reel', 'DM', 4));
-
-  function generatorText(src: string, fmt: string, obj: string, edgeVal: number): string {
-    const tone = edgeVal >= 4 ? 'sin anestesia' : 'directo pero más didáctico';
-    return `<h3>Tu contenido no vende porque no hace elegir.</h3>
-      <p><strong>Fuente:</strong> ${src} · <strong>Formato:</strong> ${fmt} · <strong>Objetivo:</strong> ${obj} · <strong>Tono:</strong> ${tone}.</p>
-      <ol>
-        <li><strong>Hook:</strong> Si tu contenido no incomoda a nadie, probablemente tampoco mueve a nadie.</li>
-        <li><strong>Diagnóstico:</strong> estás explicando demasiado y tensionando muy poco.</li>
-        <li><strong>Reframe:</strong> el contenido no existe para demostrar que sabés. Existe para que el lead se mire al espejo.</li>
-        <li><strong>Prueba:</strong> cada objeción real que atacás vuelve el DM más natural.</li>
-        <li><strong>CTA:</strong> comentá SISTEMA y te muestro dónde se está perdiendo la conversación.</li>
-      </ol>`;
-  }
+  const [objetivo,  setObjetivo]  = useState(OBJETIVOS[0]);
+  const [angulo,    setAngulo]    = useState(ANGULOS[0]);
+  const [tono,      setTono]      = useState(1);
+  const [score,     setScore]     = useState(85);
+  const [output,    setOutput]    = useState('');
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const newScore = 70 + edge * 5;
-    setScore(newScore);
-    setOutput(generatorText(source, format, objective, edge));
+    const hook = generarHook(angulo, marcaSel, tono);
+    const newScore = 70 + tono * 4 + Math.floor(Math.random() * 10);
+    setScore(Math.min(newScore, 99));
+    setOutput(`
+      <h3>${hook}</h3>
+      <p><strong>Marca:</strong> ${marcaSel} · <strong>Formato:</strong> ${format} · <strong>Objetivo:</strong> ${objetivo} · <strong>Ángulo:</strong> ${angulo}.</p>
+      <ol>
+        <li><strong>Hook visual:</strong> ${hook}</li>
+        <li><strong>Desarrollo:</strong> Mostrar la experiencia desde adentro — punto de vista del turista, no del vendedor.</li>
+        <li><strong>Prueba social:</strong> Incluir reacción real o testimonio breve al final.</li>
+        <li><strong>CTA claro:</strong> Una sola acción esperada — no mezclar.</li>
+        <li><strong>Protocolo TM:</strong> Comunicación positiva. Sin "no te lo pierdas", sin negatividad. Vivilo hoy.</li>
+      </ol>
+      <p><strong>Fuente sugerida:</strong> ${source}</p>
+    `);
   }
 
   return (
@@ -37,11 +62,19 @@ export default function GeneratorView({ active }: Props) {
         <section className="panel">
           <div className="panel-head">
             <div>
-              <p className="eyebrow">Mock IA</p>
-              <h2>Crear pieza</h2>
+              <p className="eyebrow">Generador TM</p>
+              <h2>Crear pieza de contenido</h2>
             </div>
           </div>
           <form className="form-grid" onSubmit={handleSubmit}>
+            <label>
+              Marca
+              <select value={marcaSel} onChange={(e) => setMarcaSel(e.target.value)}>
+                {MARCAS_ACTIVAS.map((m) => (
+                  <option key={m.key} value={m.key}>{m.nombre}</option>
+                ))}
+              </select>
+            </label>
             <label>
               Fuente
               <select value={source} onChange={(e) => setSource(e.target.value)}>
@@ -59,19 +92,23 @@ export default function GeneratorView({ active }: Props) {
             </label>
             <label>
               Objetivo
-              <select value={objective} onChange={(e) => setObjective(e.target.value)}>
-                <option>DM</option>
-                <option>Agenda</option>
-                <option>Registro</option>
-                <option>Venta</option>
-                <option>Tráfico a perfil</option>
+              <select value={objetivo} onChange={(e) => setObjetivo(e.target.value)}>
+                {OBJETIVOS.map((o) => <option key={o}>{o}</option>)}
               </select>
             </label>
             <label>
-              Nivel de filo
-              <input type="range" min={1} max={5} value={edge} onChange={(e) => setEdge(Number(e.target.value))} />
+              Ángulo
+              <select value={angulo} onChange={(e) => setAngulo(e.target.value)}>
+                {ANGULOS.map((a) => <option key={a}>{a}</option>)}
+              </select>
             </label>
-            <button className="button primary" type="submit">Generar mock</button>
+            <label>
+              Tono de marca
+              <select value={tono} onChange={(e) => setTono(Number(e.target.value))}>
+                {TONOS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+            </label>
+            <button className="button primary" type="submit">Generar idea</button>
           </form>
         </section>
 
@@ -79,11 +116,14 @@ export default function GeneratorView({ active }: Props) {
           <div className="panel-head">
             <div>
               <p className="eyebrow">Salida</p>
-              <h2>Guion listo para revisar</h2>
+              <h2>Pieza lista para revisar</h2>
             </div>
-            <span className="badge reel">Score {score}</span>
+            {output && <span className="badge reel">Score {score}</span>}
           </div>
-          <div className="script-card" dangerouslySetInnerHTML={{ __html: output }} />
+          {output
+            ? <div className="script-card" dangerouslySetInnerHTML={{ __html: output }} />
+            : <div className="no-results">Completá el formulario y hacé click en "Generar idea".</div>
+          }
         </section>
       </div>
     </section>

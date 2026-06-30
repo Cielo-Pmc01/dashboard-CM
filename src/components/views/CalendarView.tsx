@@ -7,8 +7,8 @@ const DAYS = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'] as const;
 interface Props { active: boolean; }
 
 export default function CalendarView({ active }: Props) {
-  const { format, owner, search } = useCMStore();
-  const items = filteredContent(allContent, format, owner, search);
+  const { format, owner, search, marca } = useCMStore();
+  const items = filteredContent(allContent, format, owner, search, marca);
 
   return (
     <section className={`view${active ? ' active' : ''}`} id="calendar">

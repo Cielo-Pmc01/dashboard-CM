@@ -1,4 +1,5 @@
 import { PALETTE } from '@/data/mock';
+import { MARCA_MAP } from '@/data/brands';
 import type { ContentItem } from '@/types';
 
 function scoreColor(score: number): string {
@@ -8,13 +9,15 @@ function scoreColor(score: number): string {
 }
 
 interface Props {
-  item: ContentItem;
+  item:  ContentItem;
   index: number;
 }
 
 export default function PostCard({ item, index }: Props) {
   const colors = PALETTE[index % PALETTE.length];
-  const slug = item.format.toLowerCase();
+  const slug   = item.format.toLowerCase();
+  const marca  = MARCA_MAP[item.marca];
+
   return (
     <article className="post-card">
       <div className="thumb" style={{ '--a': colors[0], '--b': colors[1] } as React.CSSProperties} />
@@ -22,6 +25,13 @@ export default function PostCard({ item, index }: Props) {
         <div className="card-top">
           <span className={`badge ${slug}`}>{item.format}</span>
           <span className="badge status">{item.status}</span>
+          {/* Badge de marca con color propio */}
+          <span
+            className="badge"
+            style={{ background: marca.color + '22', color: marca.color, border: `1px solid ${marca.color}44` }}
+          >
+            {item.marca}
+          </span>
         </div>
         <h3>{item.hook}</h3>
         <p>{item.summary}</p>

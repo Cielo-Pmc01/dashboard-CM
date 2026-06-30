@@ -1,32 +1,36 @@
-export type ViewKey = 'overview' | 'pipeline' | 'calendar' | 'generator' | 'sources' | 'settings';
+import type { MarcaKey } from '@/data/brands';
+
+export type ViewKey   = 'overview' | 'pipeline' | 'calendar' | 'generator' | 'sources' | 'settings';
 export type FormatKey = 'all' | 'Reel' | 'Carrusel' | 'Stories' | 'Ad';
+export type MarcaFilter = 'all' | MarcaKey;
 
 export interface ContentItem {
-  format: 'Reel' | 'Carrusel' | 'Stories' | 'Ad';
-  status: 'Idea' | 'Guion' | 'Grabado' | 'Editado' | 'Aprobado' | 'Programado';
-  owner: string;
-  day: string;
-  time: string;
+  marca:     MarcaKey;
+  format:    'Reel' | 'Carrusel' | 'Stories' | 'Ad';
+  status:    'Idea' | 'Guion' | 'Grabado' | 'Editado' | 'Aprobado' | 'Programado';
+  owner:     string;
+  day:       string;
+  time:      string;
   objective: string;
-  hook: string;
-  summary: string;
-  cta: string;
-  score: number;
+  hook:      string;
+  summary:   string;
+  cta:       string;
+  score:     number;
 }
 
 export interface Source {
-  name: string;
-  type: string;
+  name:    string;
+  type:    string;
   summary: string;
-  tags: string[];
+  tags:    string[];
 }
 
 export interface IGMetric {
-  label: string;
-  value: string;
-  delta: string;
+  label:  string;
+  value:  string;
+  delta:  string;
   detail: string;
-  color: string;
+  color:  string;
 }
 
 export interface EngagementEntry {
@@ -50,12 +54,12 @@ export interface RetentionEntry {
 export interface FunnelEntry {
   label: string;
   value: string;
-  pct: number;
+  pct:   number;
   color: string;
 }
 
 export interface HeatCell {
-  day: string;
+  day:  string;
   hour: string;
   heat: number;
 }
