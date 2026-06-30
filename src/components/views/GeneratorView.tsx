@@ -1,79 +1,91 @@
 import { useState } from 'react';
-import { PALETTE } from '@/data/mock';
+import { sources } from '@/data/mock';
 
-const FORMATS   = ['Reel', 'Carrusel', 'Stories', 'Ad'];
-const OBJ       = ['DM', 'Agenda', 'Venta', 'Registro', 'Tráfico a perfil'];
-const ANGLES    = ['Objeción', 'Dolor', 'Creencia errónea', 'Historia', 'Comparación', 'Pregunta retórica'];
+interface Props { active: boolean; }
 
-export default function GeneratorView() {
-  const [formFmt,  setFormFmt]  = useState('Reel');
-  const [formObj,  setFormObj]  = useState('DM');
-  const [formAng,  setFormAng]  = useState('Objeción');
-  const [generated, setGenerated] = useState<{ hook: string; cta: string; pair: [string, string] } | null>(null);
+export default function GeneratorView({ active }: Props) {
+  const [source,    setSource]    = useState(sources[0].name);
+  const [format,    setFormat]    = useState('Reel');
+  const [objective, setObjective] = useState('DM');
+  const [edge,      setEdge]      = useState(4);
+  const [score,     setScore]     = useState(90);
+  const [output,    setOutput]    = useState(generatorText(sources[0].name, 'Reel', 'DM', 4));
 
-  function generate() {
-    const hooks: Record<string, string[]> = {
-      Objeción:           ['Lo que te dijeron sobre {tema} es mentira.', 'No es que no tenes clientes. Es que no tenes mensaje.'],
-      Dolor:              ['Si seguís esperando que el algoritmo te salve, estás perdido.', 'La audiencia no te ignora. Te ignora a vos porque tu contenido es genérico.'],
-      'Creencia errónea': ['Postear más no arregla un mensaje que no hace elegir.', 'Engagement sin DMs no es crecimiento: es entretenimiento.'],
-      Historia:           ['El día que dupliqué mis DMs no publiqué más. Publiqué mejor.', 'Me tardé 6 meses en entender que el problema no era el formato.'],
-      Comparación:        ['Un reel con tensión vs un reel educativo. Spoiler: uno genera DMs.', 'Antes vs después de tener sistema de demanda.'],
-      'Pregunta retórica': ['¿Cuántos seguidores necesitás para vender lo que vendés?', '¿Por qué tu perfil tiene 10K y tus DMs están vacíos?'],
-    };
-    const ctas: Record<string, string> = {
-      DM: 'Comentá SISTEMA',  Agenda: 'Mandá AGENDA', Venta: 'Mandá LLAMADA',
-      Registro: 'Registrate', 'Tráfico a perfil': 'Ir al perfil',
-    };
-    const pool = hooks[formAng] ?? hooks['Objeción'];
-    const hook = pool[Math.floor(Math.random() * pool.length)];
-    const pair = PALETTE[Math.floor(Math.random() * PALETTE.length)];
-    setGenerated({ hook, cta: ctas[formObj] ?? 'Comentá', pair });
+  function generatorText(src: string, fmt: string, obj: string, edgeVal: number): string {
+    const tone = edgeVal >= 4 ? 'sin anestesia' : 'directo pero más didáctico';
+    return `<h3>Tu contenido no vende porque no hace elegir.</h3>
+      <p><strong>Fuente:</strong> ${src} · <strong>Formato:</strong> ${fmt} · <strong>Objetivo:</strong> ${obj} · <strong>Tono:</strong> ${tone}.</p>
+      <ol>
+        <li><strong>Hook:</strong> Si tu contenido no incomoda a nadie, probablemente tampoco mueve a nadie.</li>
+        <li><strong>Diagnóstico:</strong> estás explicando demasiado y tensionando muy poco.</li>
+        <li><strong>Reframe:</strong> el contenido no existe para demostrar que sabés. Existe para que el lead se mire al espejo.</li>
+        <li><strong>Prueba:</strong> cada objeción real que atacás vuelve el DM más natural.</li>
+        <li><strong>CTA:</strong> comentá SISTEMA y te muestro dónde se está perdiendo la conversación.</li>
+      </ol>`;
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const newScore = 70 + edge * 5;
+    setScore(newScore);
+    setOutput(generatorText(source, format, objective, edge));
   }
 
   return (
-    <div className="generator-wrap">
-      <section className="card generator-form">
-        <h2 className="card-title">Generador de contenido</h2>
-        <div className="gen-fields">
-          <label>
-            Formato
-            <select value={formFmt} onChange={(e) => setFormFmt(e.target.value)}>
-              {FORMATS.map((f) => <option key={f}>{f}</option>)}
-            </select>
-          </label>
-          <label>
-            Objetivo
-            <select value={formObj} onChange={(e) => setFormObj(e.target.value)}>
-              {OBJ.map((o) => <option key={o}>{o}</option>)}
-            </select>
-          </label>
-          <label>
-            Ángulo
-            <select value={formAng} onChange={(e) => setFormAng(e.target.value)}>
-              {ANGLES.map((a) => <option key={a}>{a}</option>)}
-            </select>
-          </label>
-        </div>
-        <button className="gen-btn" onClick={generate}>Generar idea</button>
-      </section>
-
-      {generated && (
-        <section className="card generator-result">
-          <h3 className="card-title">Resultado</h3>
-          <div className="gen-hook" style={{ background: `linear-gradient(135deg,${generated.pair[0]}22,${generated.pair[1]}22)`, borderColor: generated.pair[0] }}>
-            <p>{generated.hook}</p>
+    <section className={`view${active ? ' active' : ''}`} id="generator">
+      <div className="generator">
+        <section className="panel">
+          <div className="panel-head">
+            <div>
+              <p className="eyebrow">Mock IA</p>
+              <h2>Crear pieza</h2>
+            </div>
           </div>
-          <div className="gen-meta">
-            <span>Formato: <strong>{formFmt}</strong></span>
-            <span>Objetivo: <strong>{formObj}</strong></span>
-            <span>Ángulo: <strong>{formAng}</strong></span>
-          </div>
-          <div className="gen-cta-block">
-            <span>CTA sugerido:</span>
-            <strong className="gen-cta">{generated.cta}</strong>
-          </div>
+          <form className="form-grid" onSubmit={handleSubmit}>
+            <label>
+              Fuente
+              <select value={source} onChange={(e) => setSource(e.target.value)}>
+                {sources.map((s) => <option key={s.name}>{s.name}</option>)}
+              </select>
+            </label>
+            <label>
+              Formato
+              <select value={format} onChange={(e) => setFormat(e.target.value)}>
+                <option>Reel</option>
+                <option>Carrusel</option>
+                <option>Stories</option>
+                <option>Ad</option>
+              </select>
+            </label>
+            <label>
+              Objetivo
+              <select value={objective} onChange={(e) => setObjective(e.target.value)}>
+                <option>DM</option>
+                <option>Agenda</option>
+                <option>Registro</option>
+                <option>Venta</option>
+                <option>Tráfico a perfil</option>
+              </select>
+            </label>
+            <label>
+              Nivel de filo
+              <input type="range" min={1} max={5} value={edge} onChange={(e) => setEdge(Number(e.target.value))} />
+            </label>
+            <button className="button primary" type="submit">Generar mock</button>
+          </form>
         </section>
-      )}
-    </div>
+
+        <section className="panel output">
+          <div className="panel-head">
+            <div>
+              <p className="eyebrow">Salida</p>
+              <h2>Guion listo para revisar</h2>
+            </div>
+            <span className="badge reel">Score {score}</span>
+          </div>
+          <div className="script-card" dangerouslySetInnerHTML={{ __html: output }} />
+        </section>
+      </div>
+    </section>
   );
 }

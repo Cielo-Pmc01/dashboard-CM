@@ -666,6 +666,10 @@ input[type="range"] { accent-color: var(--cyan); }
   .lane, .day { min-height: auto; }
 }
 
+/* ─── View toggle ─── */
+.view { display: none; }
+.view.active { display: block; }
+
 /* ─── React app shell ─── */
 .app-shell {
   display: grid;

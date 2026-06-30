@@ -1,30 +1,45 @@
 import { useCMStore } from '@/store';
-import { content } from '@/data/mock';
 import type { FormatKey } from '@/types';
 
-const FORMATS: FormatKey[] = ['all', 'Reel', 'Carrusel', 'Stories', 'Ad'];
-const owners = ['all', ...Array.from(new Set(content.map((c) => c.owner)))];
+const FORMATS: { key: FormatKey; label: string }[] = [
+  { key: 'all',      label: 'Todo'       },
+  { key: 'Reel',     label: 'Reels'      },
+  { key: 'Carrusel', label: 'Carruseles' },
+  { key: 'Stories',  label: 'Stories'    },
+  { key: 'Ad',       label: 'Ads'        },
+];
 
 export default function FilterBar() {
-  const { format, owner, search, setFormat, setOwner, setSearch } = useCMStore();
+  const { format, search, setFormat, setSearch } = useCMStore();
+
+  function reset() {
+    setFormat('all');
+    setSearch('');
+  }
+
   return (
-    <div className="filter-bar">
-      <select value={format} onChange={(e) => setFormat(e.target.value as FormatKey)}>
+    <div className="top-row">
+      <div className="filters" id="formatFilters">
         {FORMATS.map((f) => (
-          <option key={f} value={f}>{f === 'all' ? 'Todos los formatos' : f}</option>
+          <button
+            key={f.key}
+            className={`chip${format === f.key ? ' active' : ''}`}
+            onClick={() => setFormat(f.key)}
+          >
+            {f.label}
+          </button>
         ))}
-      </select>
-      <select value={owner} onChange={(e) => setOwner(e.target.value)}>
-        {owners.map((o) => (
-          <option key={o} value={o}>{o === 'all' ? 'Todos los dueños' : o}</option>
-        ))}
-      </select>
-      <input
-        type="text"
-        placeholder="Buscar contenido..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+      </div>
+      <div className="toolbar">
+        <input
+          className="search"
+          type="search"
+          placeholder="Buscar hook, CTA, responsable..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <button className="icon-button" onClick={reset} title="Limpiar filtros">R</button>
+      </div>
     </div>
   );
 }

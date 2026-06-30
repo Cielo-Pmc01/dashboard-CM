@@ -1,31 +1,45 @@
 import { useCMStore } from '@/store';
 import type { ViewKey } from '@/types';
 
-const NAV: { key: ViewKey; label: string; icon: string }[] = [
-  { key: 'overview',  label: 'Overview',   icon: '◉' },
-  { key: 'pipeline',  label: 'Pipeline',   icon: '▦' },
-  { key: 'calendar',  label: 'Calendario', icon: '▦' },
-  { key: 'generator', label: 'Generador',  icon: '✦' },
-  { key: 'sources',   label: 'Fuentes',    icon: '◈' },
-  { key: 'settings',  label: 'Config',     icon: '⚙' },
+const NAV: { key: ViewKey; icon: string; label: string }[] = [
+  { key: 'overview',  icon: 'C',  label: 'Control'    },
+  { key: 'pipeline',  icon: 'P',  label: 'Pipeline'   },
+  { key: 'calendar',  icon: '7',  label: 'Calendario' },
+  { key: 'generator', icon: 'AI', label: 'Generador'  },
+  { key: 'sources',   icon: 'F',  label: 'Fuentes'    },
+  { key: 'settings',  icon: 'IG', label: 'IG Ready'   },
 ];
 
 export default function Rail() {
   const { view, setView } = useCMStore();
   return (
-    <nav className="rail">
-      <div className="logo">SYK</div>
-      {NAV.map((n) => (
-        <button
-          key={n.key}
-          className={`nav-btn${view === n.key ? ' active' : ''}`}
-          onClick={() => setView(n.key)}
-          title={n.label}
-        >
-          <span className="nav-icon">{n.icon}</span>
-          <span className="nav-label">{n.label}</span>
-        </button>
-      ))}
-    </nav>
+    <aside className="rail">
+      <div className="brand">
+        <div className="mark">S</div>
+        <div>
+          <strong>SYK Command</strong>
+          <span>Content OS mock</span>
+        </div>
+      </div>
+
+      <nav className="nav" aria-label="Vistas">
+        {NAV.map((n) => (
+          <button
+            key={n.key}
+            className={view === n.key ? 'active' : ''}
+            onClick={() => setView(n.key)}
+            title={n.label}
+          >
+            <i>{n.icon}</i><b>{n.label}</b>
+          </button>
+        ))}
+      </nav>
+
+      <div className="mini-card">
+        <div className="signal">OFFLINE SAFE</div>
+        <strong>Data mock local</strong>
+        <span>Sin Meta API, sin fetch, sin llamadas externas.</span>
+      </div>
+    </aside>
   );
 }
