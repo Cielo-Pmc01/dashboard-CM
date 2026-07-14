@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { content as allContent } from '@/data/mock';
+import { usePipelineContent } from '@/hooks/usePipelineContent';
 import { useCMStore } from '@/store';
 import { filteredContent } from '@/utils/helpers';
 import PostCard from '@/components/shared/PostCard';
@@ -11,6 +11,7 @@ interface Props { active: boolean; }
 export default function PipelineView({ active }: Props) {
   const { format, search, marca } = useCMStore();
   const [owner, setOwner] = useState('all');
+  const { items: allContent, loading, error, refetch } = usePipelineContent();
 
   const owners = ['all', ...Array.from(new Set(allContent.map((c) => c.owner))).sort()];
   const items = filteredContent(allContent, format, owner, search, marca);
@@ -29,23 +30,27 @@ export default function PipelineView({ active }: Props) {
             ))}
           </select>
         </div>
-        <div className="board">
-          {STATUSES.map((status) => {
-            const laneItems = items.filter((c) => c.status === status);
-            return (
-              <section key={status} className="lane">
-                <div className="lane-head">
-                  <span>{status}</span>
-                  <b>{laneItems.length}</b>
-                </div>
-                {laneItems.length > 0
-                  ? laneItems.map((item, i) => <PostCard key={i} item={item} index={i} />)
-                  : <div className="no-results">Vacío</div>
-                }
-              </section>
-            );
-          })}
-        </div>
+        {loading && <div className="no-results">Cargando contenido real…</div>}
+        {error && <div className="no-results">Error cargando datos: {error} — <button className="button" onClick={refetch}>Reintentar</button></div>}
+        {!loading && !error && (
+          <div className="board">
+            {STATUSES.map((status) => {
+              const laneItems = items.filter((c) => c.status === status);
+              return (
+                <section key={status} className="lane">
+                  <div className="lane-head">
+                    <span>{status}</span>
+                    <b>{laneItems.length}</b>
+                  </div>
+                  {laneItems.length > 0
+                    ? laneItems.map((item) => <PostCard key={item.id} item={item} index={item.id ?? 0} onChanged={refetch} />)
+                    : <div className="no-results">Vacío</div>
+                  }
+                </section>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );
