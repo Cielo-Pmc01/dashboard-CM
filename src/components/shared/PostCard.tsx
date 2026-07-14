@@ -104,21 +104,21 @@ export default function PostCard({ item, index, onChanged }: Props) {
               onChange={(e) => setMotivo(e.target.value)}
               placeholder="Motivo (ej: cambiar el ángulo, muy largo)"
             />
-            <div className="card-top">
-              <button className="button" disabled={busy} onClick={() => setMode('view')}>Cancelar</button>
-              <button className="button primary" disabled={busy || !motivo.trim()} onClick={handleReject}>Confirmar rechazo</button>
+            <div className="card-actions">
+              <button className="button small" disabled={busy} onClick={() => setMode('view')}>Cancelar</button>
+              <button className="button primary small" disabled={busy || !motivo.trim()} onClick={handleReject}>Confirmar rechazo</button>
             </div>
           </div>
         ) : mode === 'edit' ? (
-          <div className="card-top">
-            <button className="button" disabled={busy} onClick={() => setMode('view')}>Cancelar</button>
-            <button className="button primary" disabled={busy} onClick={handleSaveEdit}>Guardar</button>
+          <div className="card-actions">
+            <button className="button small" disabled={busy} onClick={() => setMode('view')}>Cancelar</button>
+            <button className="button primary small" disabled={busy} onClick={handleSaveEdit}>Guardar</button>
           </div>
         ) : (
-          <div className="card-top">
-            <button className="button primary" disabled={busy || item.status === 'Aprobado'} onClick={handleApprove}>Aprobar</button>
-            <button className="button" disabled={busy} onClick={() => setMode('edit')}>Editar a mano</button>
-            <button className="button" disabled={busy} onClick={() => setMode('reject')}>Rechazar</button>
+          <div className="card-actions">
+            <button className="button primary small" disabled={busy || item.status === 'Aprobado'} onClick={handleApprove}>Aprobar</button>
+            <button className="button small" disabled={busy} onClick={() => setMode('edit')}>Editar a mano</button>
+            <button className="button small" disabled={busy} onClick={() => setMode('reject')}>Rechazar</button>
           </div>
         )}
       </div>
