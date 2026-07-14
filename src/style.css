@@ -606,9 +606,10 @@ textarea { min-height: 140px; padding: 12px; resize: vertical; }
 .calendar-item p { font-size: 13px; line-height: 1.32; margin-bottom: 0; }
 
 .generator { display: grid; grid-template-columns: 380px minmax(0, 1fr); gap: 12px; }
-.form-grid { display: grid; gap: 12px; }
+.form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 
-label { display: grid; gap: 6px; color: var(--soft); font-size: 12px; font-weight: 800; }
+label { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; color: var(--soft); font-size: 12px; font-weight: 800; }
+label select, label input, label textarea { min-width: 0; }
 
 input[type="range"] { accent-color: var(--cyan); }
 
