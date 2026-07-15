@@ -1,59 +1,66 @@
 import { useState } from 'react';
-import { sources } from '@/data/mock';
 import { MARCAS_ACTIVAS } from '@/data/brands';
+import { usePipelineContent } from '@/hooks/usePipelineContent';
+import { useExcursionCatalog } from '@/hooks/useExcursionCatalog';
 
 interface Props { active: boolean; }
 
-const OBJETIVOS = ['Consulta / DM', 'Reserva directa', 'WhatsApp', 'Visita al perfil', 'Guardar'];
-const ANGULOS   = ['Experiencia POV', 'Testimonio de cliente', 'Tips prácticos', 'Antes / Después', 'Comparación destinos', 'Pregunta retórica'];
-const TONOS     = [
-  { label: 'Familiar / Cercano (TB)', value: 1 },
-  { label: 'Premium / Inspirador (BE, PB)', value: 2 },
-  { label: 'Joven / Viral (TC)', value: 3 },
-  { label: 'Económico / Directo (TP)', value: 4 },
-  { label: 'Portugués / Brasil (PBRS, TBBR)', value: 5 },
-];
+type Modo = 'brief' | 'catalogo' | 'tendencia';
 
-function generarHook(angulo: string, marca: string, tono: number): string {
-  const hooks: Record<string, string[]> = {
-    'Experiencia POV':         ['El día que [excursión] te cambia la perspectiva de la Patagonia.', 'Esto es lo que sentís cuando llegás al [destino] por primera vez.'],
-    'Testimonio de cliente':   ['"Nunca pensé que Bariloche en invierno iba a ser tan increíble." — Familia de Buenos Aires.', '"La mejor decisión del viaje fue esta excursión." — Turista brasileño.'],
-    'Tips prácticos':          ['Todo lo que nadie te dice antes de ir a [destino] en invierno.', '5 cosas que tenés que saber antes de reservar en Bariloche.'],
-    'Antes / Después':         ['Antes: no sabíamos qué hacer en Bariloche. Después: hicimos [excursión] y queremos volver.', 'Llegaron sin plan. Se fueron con el mejor recuerdo de su vida.'],
-    'Comparación destinos':    ['Si tenés que elegir entre el Circuito Chico y Cerro Campanario, este reel decide por vos.', 'Las 3 excursiones imperdibles de Bariloche — y cuál hacer primero.'],
-    'Pregunta retórica':       ['¿Sabés qué pasa cuando bajás el Río Limay por primera vez? 🌊', '¿Nunca pisaste nieve? Esto es lo que sentís el primer día en Bariloche. ❄️'],
-  };
-  const pool = hooks[angulo] ?? hooks['Experiencia POV'];
-  return pool[Math.floor(Math.random() * pool.length)];
-}
+const WEBHOOK_BY_MODO: Record<Modo, string> = {
+  brief: import.meta.env.VITE_CM_WEBHOOK_URL,
+  catalogo: import.meta.env.VITE_CM_CATALOG_WEBHOOK_URL,
+  tendencia: import.meta.env.VITE_CM_TREND_WEBHOOK_URL,
+};
 
 export default function GeneratorView({ active }: Props) {
-  const [source,    setSource]    = useState(sources[0].name);
-  const [marcaSel,  setMarcaSel]  = useState(MARCAS_ACTIVAS[0].key);
-  const [format,    setFormat]    = useState('Reel');
-  const [objetivo,  setObjetivo]  = useState(OBJETIVOS[0]);
-  const [angulo,    setAngulo]    = useState(ANGULOS[0]);
-  const [tono,      setTono]      = useState(1);
-  const [score,     setScore]     = useState(85);
-  const [output,    setOutput]    = useState('');
+  const [modo,    setModo]    = useState<Modo>('brief');
+  const [brief,   setBrief]   = useState('');
+  const [excursionId, setExcursionId] = useState<string>('azar');
+  const [formato, setFormato] = useState<'Reel' | 'Carrusel' | 'Stories' | 'Ad'>('Reel');
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [resultCount, setResultCount] = useState<number | null>(null);
+  const [resultLabel, setResultLabel] = useState<string | null>(null);
+  const { refetch } = usePipelineContent();
+  const { excursiones, loading: loadingExcursiones } = useExcursionCatalog();
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const hook = generarHook(angulo, marcaSel, tono);
-    const newScore = 70 + tono * 4 + Math.floor(Math.random() * 10);
-    setScore(Math.min(newScore, 99));
-    setOutput(`
-      <h3>${hook}</h3>
-      <p><strong>Marca:</strong> ${marcaSel} · <strong>Formato:</strong> ${format} · <strong>Objetivo:</strong> ${objetivo} · <strong>Ángulo:</strong> ${angulo}.</p>
-      <ol>
-        <li><strong>Hook visual:</strong> ${hook}</li>
-        <li><strong>Desarrollo:</strong> Mostrar la experiencia desde adentro — punto de vista del turista, no del vendedor.</li>
-        <li><strong>Prueba social:</strong> Incluir reacción real o testimonio breve al final.</li>
-        <li><strong>CTA claro:</strong> Una sola acción esperada — no mezclar.</li>
-        <li><strong>Protocolo TM:</strong> Comunicación positiva. Sin "no te lo pierdas", sin negatividad. Vivilo hoy.</li>
-      </ol>
-      <p><strong>Fuente sugerida:</strong> ${source}</p>
-    `);
+    if (modo === 'brief' && !brief.trim()) return;
+    setLoading(true);
+    setErrorMsg(null);
+    setResultCount(null);
+    setResultLabel(null);
+    try {
+      const body = modo === 'brief'
+        ? { brief, formato }
+        : modo === 'catalogo'
+          ? { formato, ...(excursionId !== 'azar' ? { excursion_id: Number(excursionId) } : {}) }
+          : { formato };
+      const res = await fetch(WEBHOOK_BY_MODO[modo], {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(`El generador respondió ${res.status}`);
+      const data = await res.json();
+      if (modo === 'catalogo') {
+        setResultCount(data.count ?? null);
+        setResultLabel(data.excursion_nombre ?? null);
+      } else if (modo === 'tendencia') {
+        setResultCount(data.count ?? null);
+        setResultLabel(data.tema ?? null);
+      } else {
+        const rows = Array.isArray(data) ? data : [data];
+        setResultCount(rows.length);
+      }
+      await refetch();
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Error generando contenido');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -63,67 +70,82 @@ export default function GeneratorView({ active }: Props) {
           <div className="panel-head">
             <div>
               <p className="eyebrow">Generador TM</p>
-              <h2>Crear pieza de contenido</h2>
+              <h2>Crear piezas para las {MARCAS_ACTIVAS.length} marcas</h2>
             </div>
           </div>
+
+          <div className="filters" style={{ marginBottom: 14 }}>
+            <button type="button" className={`chip${modo === 'brief' ? ' active' : ''}`} onClick={() => setModo('brief')}>Brief manual</button>
+            <button type="button" className={`chip${modo === 'catalogo' ? ' active' : ''}`} onClick={() => setModo('catalogo')}>Desde catálogo</button>
+            <button type="button" className={`chip${modo === 'tendencia' ? ' active' : ''}`} onClick={() => setModo('tendencia')}>Desde tendencia</button>
+          </div>
+
           <form className="form-grid" onSubmit={handleSubmit}>
-            <label>
-              Marca
-              <select value={marcaSel} onChange={(e) => setMarcaSel(e.target.value)}>
-                {MARCAS_ACTIVAS.map((m) => (
-                  <option key={m.key} value={m.key}>{m.nombre}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Fuente
-              <select value={source} onChange={(e) => setSource(e.target.value)}>
-                {sources.map((s) => <option key={s.name}>{s.name}</option>)}
-              </select>
-            </label>
+            {modo === 'brief' && (
+              <label>
+                Brief
+                <textarea
+                  value={brief}
+                  onChange={(e) => setBrief(e.target.value)}
+                  placeholder="Ej: Promocionar la excursión a Piedras Blancas para la temporada de nieve"
+                  rows={4}
+                  required
+                />
+              </label>
+            )}
+            {modo === 'catalogo' && (
+              <label>
+                Excursión
+                <select value={excursionId} onChange={(e) => setExcursionId(e.target.value)} disabled={loadingExcursiones}>
+                  <option value="azar">Cualquiera (al azar)</option>
+                  {excursiones.map((exc) => (
+                    <option key={exc.id} value={exc.id}>{exc.nombre}</option>
+                  ))}
+                </select>
+              </label>
+            )}
+            {modo === 'tendencia' && (
+              <p className="no-results">
+                El generador busca en la web qué tema de nieve/invierno en Bariloche está generando interés esta semana y arma el contenido sobre eso — no hace falta elegir nada más.
+              </p>
+            )}
             <label>
               Formato
-              <select value={format} onChange={(e) => setFormat(e.target.value)}>
+              <select value={formato} onChange={(e) => setFormato(e.target.value as typeof formato)}>
                 <option>Reel</option>
                 <option>Carrusel</option>
                 <option>Stories</option>
                 <option>Ad</option>
               </select>
             </label>
-            <label>
-              Objetivo
-              <select value={objetivo} onChange={(e) => setObjetivo(e.target.value)}>
-                {OBJETIVOS.map((o) => <option key={o}>{o}</option>)}
-              </select>
-            </label>
-            <label>
-              Ángulo
-              <select value={angulo} onChange={(e) => setAngulo(e.target.value)}>
-                {ANGULOS.map((a) => <option key={a}>{a}</option>)}
-              </select>
-            </label>
-            <label>
-              Tono de marca
-              <select value={tono} onChange={(e) => setTono(Number(e.target.value))}>
-                {TONOS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
-            </label>
-            <button className="button primary" type="submit">Generar idea</button>
+            <button className="button primary" type="submit" disabled={loading}>
+              {loading
+                ? (modo === 'tendencia' ? 'Investigando y generando…' : 'Generando para las 9 marcas…')
+                : 'Generar contenido'}
+            </button>
           </form>
         </section>
 
         <section className="panel output">
           <div className="panel-head">
             <div>
-              <p className="eyebrow">Salida</p>
-              <h2>Pieza lista para revisar</h2>
+              <p className="eyebrow">Resultado</p>
+              <h2>Estado de la generación</h2>
             </div>
-            {output && <span className="badge reel">Score {score}</span>}
           </div>
-          {output
-            ? <div className="script-card" dangerouslySetInnerHTML={{ __html: output }} />
-            : <div className="no-results">Completá el formulario y hacé click en "Generar idea".</div>
-          }
+          {errorMsg && <div className="no-results">{errorMsg}</div>}
+          {resultCount !== null && !errorMsg && (
+            <div className="no-results">
+              Se generaron {resultCount} piezas{resultLabel ? ` sobre "${resultLabel}"` : ''} — revisalas en la pestaña Pipeline, columna "Idea".
+            </div>
+          )}
+          {!errorMsg && resultCount === null && !loading && (
+            <div className="no-results">
+              {modo === 'brief' && 'Completá el brief y hacé click en "Generar contenido".'}
+              {modo === 'catalogo' && 'Elegí una excursión (o dejá "al azar") y hacé click en "Generar contenido".'}
+              {modo === 'tendencia' && 'Hacé click en "Generar contenido" — puede tardar un poco más porque primero investiga en la web.'}
+            </div>
+          )}
         </section>
       </div>
     </section>
