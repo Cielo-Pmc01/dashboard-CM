@@ -5,7 +5,13 @@ import { useExcursionCatalog } from '@/hooks/useExcursionCatalog';
 
 interface Props { active: boolean; }
 
-type Modo = 'brief' | 'catalogo';
+type Modo = 'brief' | 'catalogo' | 'tendencia';
+
+const WEBHOOK_BY_MODO: Record<Modo, string> = {
+  brief: import.meta.env.VITE_CM_WEBHOOK_URL,
+  catalogo: import.meta.env.VITE_CM_CATALOG_WEBHOOK_URL,
+  tendencia: import.meta.env.VITE_CM_TREND_WEBHOOK_URL,
+};
 
 export default function GeneratorView({ active }: Props) {
   const [modo,    setModo]    = useState<Modo>('brief');
@@ -15,7 +21,7 @@ export default function GeneratorView({ active }: Props) {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [resultCount, setResultCount] = useState<number | null>(null);
-  const [resultExcursion, setResultExcursion] = useState<string | null>(null);
+  const [resultLabel, setResultLabel] = useState<string | null>(null);
   const { refetch } = usePipelineContent();
   const { excursiones, loading: loadingExcursiones } = useExcursionCatalog();
 
@@ -25,13 +31,14 @@ export default function GeneratorView({ active }: Props) {
     setLoading(true);
     setErrorMsg(null);
     setResultCount(null);
-    setResultExcursion(null);
+    setResultLabel(null);
     try {
-      const url = modo === 'brief' ? import.meta.env.VITE_CM_WEBHOOK_URL : import.meta.env.VITE_CM_CATALOG_WEBHOOK_URL;
       const body = modo === 'brief'
         ? { brief, formato }
-        : { formato, ...(excursionId !== 'azar' ? { excursion_id: Number(excursionId) } : {}) };
-      const res = await fetch(url, {
+        : modo === 'catalogo'
+          ? { formato, ...(excursionId !== 'azar' ? { excursion_id: Number(excursionId) } : {}) }
+          : { formato };
+      const res = await fetch(WEBHOOK_BY_MODO[modo], {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -40,7 +47,10 @@ export default function GeneratorView({ active }: Props) {
       const data = await res.json();
       if (modo === 'catalogo') {
         setResultCount(data.count ?? null);
-        setResultExcursion(data.excursion_nombre ?? null);
+        setResultLabel(data.excursion_nombre ?? null);
+      } else if (modo === 'tendencia') {
+        setResultCount(data.count ?? null);
+        setResultLabel(data.tema ?? null);
       } else {
         const rows = Array.isArray(data) ? data : [data];
         setResultCount(rows.length);
@@ -67,10 +77,11 @@ export default function GeneratorView({ active }: Props) {
           <div className="filters" style={{ marginBottom: 14 }}>
             <button type="button" className={`chip${modo === 'brief' ? ' active' : ''}`} onClick={() => setModo('brief')}>Brief manual</button>
             <button type="button" className={`chip${modo === 'catalogo' ? ' active' : ''}`} onClick={() => setModo('catalogo')}>Desde catálogo</button>
+            <button type="button" className={`chip${modo === 'tendencia' ? ' active' : ''}`} onClick={() => setModo('tendencia')}>Desde tendencia</button>
           </div>
 
           <form className="form-grid" onSubmit={handleSubmit}>
-            {modo === 'brief' ? (
+            {modo === 'brief' && (
               <label>
                 Brief
                 <textarea
@@ -81,7 +92,8 @@ export default function GeneratorView({ active }: Props) {
                   required
                 />
               </label>
-            ) : (
+            )}
+            {modo === 'catalogo' && (
               <label>
                 Excursión
                 <select value={excursionId} onChange={(e) => setExcursionId(e.target.value)} disabled={loadingExcursiones}>
@@ -91,6 +103,11 @@ export default function GeneratorView({ active }: Props) {
                   ))}
                 </select>
               </label>
+            )}
+            {modo === 'tendencia' && (
+              <p className="no-results">
+                El generador busca en la web qué tema de nieve/invierno en Bariloche está generando interés esta semana y arma el contenido sobre eso — no hace falta elegir nada más.
+              </p>
             )}
             <label>
               Formato
@@ -102,7 +119,9 @@ export default function GeneratorView({ active }: Props) {
               </select>
             </label>
             <button className="button primary" type="submit" disabled={loading}>
-              {loading ? 'Generando para las 9 marcas…' : 'Generar contenido'}
+              {loading
+                ? (modo === 'tendencia' ? 'Investigando y generando…' : 'Generando para las 9 marcas…')
+                : 'Generar contenido'}
             </button>
           </form>
         </section>
@@ -117,14 +136,14 @@ export default function GeneratorView({ active }: Props) {
           {errorMsg && <div className="no-results">{errorMsg}</div>}
           {resultCount !== null && !errorMsg && (
             <div className="no-results">
-              Se generaron {resultCount} piezas{resultExcursion ? ` sobre "${resultExcursion}"` : ''} — revisalas en la pestaña Pipeline, columna "Idea".
+              Se generaron {resultCount} piezas{resultLabel ? ` sobre "${resultLabel}"` : ''} — revisalas en la pestaña Pipeline, columna "Idea".
             </div>
           )}
           {!errorMsg && resultCount === null && !loading && (
             <div className="no-results">
-              {modo === 'brief'
-                ? 'Completá el brief y hacé click en "Generar contenido".'
-                : 'Elegí una excursión (o dejá "al azar") y hacé click en "Generar contenido".'}
+              {modo === 'brief' && 'Completá el brief y hacé click en "Generar contenido".'}
+              {modo === 'catalogo' && 'Elegí una excursión (o dejá "al azar") y hacé click en "Generar contenido".'}
+              {modo === 'tendencia' && 'Hacé click en "Generar contenido" — puede tardar un poco más porque primero investiga en la web.'}
             </div>
           )}
         </section>
