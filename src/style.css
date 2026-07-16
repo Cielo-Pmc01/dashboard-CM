@@ -1016,6 +1016,17 @@ input[type="range"] { accent-color: var(--cyan); }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ─── SP Summary (vista curada) ─── */
+.sp-summary-shell { max-width: 1100px; margin: 0 auto; padding: 24px; }
+.sp-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.sp-summary-account { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); }
+.sp-summary-section { margin-top: 16px; }
+
 /* ─── Account (Rail) ─── */
 .account-card {
   border: 1px solid var(--line);
