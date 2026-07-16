@@ -5,12 +5,13 @@ import { useExcursionCatalog } from '@/hooks/useExcursionCatalog';
 
 interface Props { active: boolean; }
 
-type Modo = 'brief' | 'catalogo' | 'tendencia';
+type Modo = 'brief' | 'catalogo' | 'tendencia' | 'chatwoot';
 
 const WEBHOOK_BY_MODO: Record<Modo, string> = {
   brief: import.meta.env.VITE_CM_WEBHOOK_URL,
   catalogo: import.meta.env.VITE_CM_CATALOG_WEBHOOK_URL,
   tendencia: import.meta.env.VITE_CM_TREND_WEBHOOK_URL,
+  chatwoot: import.meta.env.VITE_CM_CHATWOOT_WEBHOOK_URL,
 };
 
 export default function GeneratorView({ active }: Props) {
@@ -48,7 +49,7 @@ export default function GeneratorView({ active }: Props) {
       if (modo === 'catalogo') {
         setResultCount(data.count ?? null);
         setResultLabel(data.excursion_nombre ?? null);
-      } else if (modo === 'tendencia') {
+      } else if (modo === 'tendencia' || modo === 'chatwoot') {
         setResultCount(data.count ?? null);
         setResultLabel(data.tema ?? null);
       } else {
@@ -78,6 +79,7 @@ export default function GeneratorView({ active }: Props) {
             <button type="button" className={`chip${modo === 'brief' ? ' active' : ''}`} onClick={() => setModo('brief')}>Brief manual</button>
             <button type="button" className={`chip${modo === 'catalogo' ? ' active' : ''}`} onClick={() => setModo('catalogo')}>Desde catálogo</button>
             <button type="button" className={`chip${modo === 'tendencia' ? ' active' : ''}`} onClick={() => setModo('tendencia')}>Desde tendencia</button>
+            <button type="button" className={`chip${modo === 'chatwoot' ? ' active' : ''}`} onClick={() => setModo('chatwoot')}>Desde Chatwoot</button>
           </div>
 
           <form className="form-grid" onSubmit={handleSubmit}>
@@ -109,6 +111,11 @@ export default function GeneratorView({ active }: Props) {
                 El generador busca en la web qué tema de nieve/invierno en Bariloche está generando interés esta semana y arma el contenido sobre eso — no hace falta elegir nada más.
               </p>
             )}
+            {modo === 'chatwoot' && (
+              <p className="no-results">
+                El generador revisa las preguntas reales que hicieron los clientes por WhatsApp esta semana y arma contenido que responde la duda que más se repite — no hace falta elegir nada más.
+              </p>
+            )}
             <label>
               Formato
               <select value={formato} onChange={(e) => setFormato(e.target.value as typeof formato)}>
@@ -120,7 +127,7 @@ export default function GeneratorView({ active }: Props) {
             </label>
             <button className="button primary" type="submit" disabled={loading}>
               {loading
-                ? (modo === 'tendencia' ? 'Investigando y generando…' : 'Generando para las 9 marcas…')
+                ? (modo === 'tendencia' || modo === 'chatwoot' ? 'Investigando y generando…' : 'Generando para las 9 marcas…')
                 : 'Generar contenido'}
             </button>
           </form>
@@ -144,6 +151,7 @@ export default function GeneratorView({ active }: Props) {
               {modo === 'brief' && 'Completá el brief y hacé click en "Generar contenido".'}
               {modo === 'catalogo' && 'Elegí una excursión (o dejá "al azar") y hacé click en "Generar contenido".'}
               {modo === 'tendencia' && 'Hacé click en "Generar contenido" — puede tardar un poco más porque primero investiga en la web.'}
+              {modo === 'chatwoot' && 'Hacé click en "Generar contenido" — puede tardar un poco más porque primero revisa las conversaciones recientes de WhatsApp.'}
             </div>
           )}
         </section>
