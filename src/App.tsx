@@ -1,5 +1,7 @@
 import '@/style.css';
 import { useCMStore } from '@/store';
+import { useAuthStore } from '@/store/auth';
+import { LoginScreen } from '@/components/auth/LoginScreen';
 import Rail          from '@/components/layout/Rail';
 import FilterBar     from '@/components/layout/FilterBar';
 import OverviewView  from '@/components/views/OverviewView';
@@ -11,6 +13,20 @@ import SettingsView  from '@/components/views/SettingsView';
 
 export default function App() {
   const { view, setView } = useCMStore();
+  const { status } = useAuthStore();
+
+  if (status === 'loading') {
+    return (
+      <div className="loading-overlay">
+        <div className="loading-spinner" />
+        <div>Cargando…</div>
+      </div>
+    );
+  }
+
+  if (status === 'signedOut') {
+    return <LoginScreen />;
+  }
 
   return (
     <div className="app">

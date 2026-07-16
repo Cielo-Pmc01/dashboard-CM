@@ -1,4 +1,5 @@
 import { useCMStore } from '@/store';
+import { useAuthStore } from '@/store/auth';
 import type { ViewKey } from '@/types';
 
 const NAV: { key: ViewKey; icon: string; label: string }[] = [
@@ -12,6 +13,7 @@ const NAV: { key: ViewKey; icon: string; label: string }[] = [
 
 export default function Rail() {
   const { view, setView } = useCMStore();
+  const { session, profile, signOut } = useAuthStore();
   return (
     <aside className="rail">
       <div className="brand">
@@ -39,6 +41,14 @@ export default function Rail() {
         <div className="signal">OFFLINE SAFE</div>
         <strong>Data mock local</strong>
         <span>Sin Meta API, sin fetch, sin llamadas externas.</span>
+      </div>
+
+      <div className="account-card">
+        <div className="account-email">{profile?.email ?? session?.user.email ?? ''}</div>
+        <div className="account-role">{profile?.role ?? 'viewer'}</div>
+        <button type="button" className="button account-signout" onClick={() => void signOut()}>
+          Salir
+        </button>
       </div>
     </aside>
   );
