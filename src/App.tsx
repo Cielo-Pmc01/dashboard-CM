@@ -2,6 +2,7 @@ import '@/style.css';
 import { useCMStore } from '@/store';
 import { useAuthStore } from '@/store/auth';
 import { LoginScreen } from '@/components/auth/LoginScreen';
+import SPSummaryView from '@/components/views/SPSummaryView';
 import Rail          from '@/components/layout/Rail';
 import FilterBar     from '@/components/layout/FilterBar';
 import OverviewView  from '@/components/views/OverviewView';
@@ -13,7 +14,7 @@ import SettingsView  from '@/components/views/SettingsView';
 
 export default function App() {
   const { view, setView } = useCMStore();
-  const { status } = useAuthStore();
+  const { status, profile } = useAuthStore();
 
   if (status === 'loading') {
     return (
@@ -26,6 +27,10 @@ export default function App() {
 
   if (status === 'signedOut') {
     return <LoginScreen />;
+  }
+
+  if (profile && profile.role !== 'cm' && profile.role !== 'admin') {
+    return <SPSummaryView />;
   }
 
   return (
